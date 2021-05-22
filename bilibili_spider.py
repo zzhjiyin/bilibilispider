@@ -37,11 +37,7 @@ for i in results:
         bvid_list.append(i['bvid'])
         title_list.append(i['title'])
 sql_list = list(zip(bvid_list,title_list))
-print(sql_list)
-# print(bvid_list)
-# print(title_list)
-# for i in range(0,len(sql_list)):
-#     print(sql_list[i][0],"%",sql_list[i][1])
+#print(sql_list)
 
 def get_conn():
     """
@@ -76,7 +72,7 @@ def insert_history():
         conn, cursor = get_conn()
         sql = "insert into web(bvid,title) values (%s,%s)"
         for i in range(0,len(sql_list)):
-            cursor.execute(sql,[sql_list[i  ][0],sql_list[i][1]])
+            cursor.execute(sql,[sql_list[i][0],sql_list[i][1]])
             print(sql_list[i][0]," ",sql_list[i][1])
         conn.commit()
         print(f"{time.asctime()}插入完毕")
@@ -93,17 +89,29 @@ def update_details():
     conn = None
     try:
         conn, cursor = get_conn()
-        sql = "truncate web"
-        cursor.execute(sql)
         print(f"{time.asctime()}开始更新最新数据")
         sql = "insert into web(bvid,title) values (%s,%s)"
-        for i in range(0,len(sql_list)):
-            cursor.execute(sql,[sql_list[i][0],sql_list[i][1]])
-            print(sql_list[i][0]," ",sql_list[i][1])
+        sql_query = "select bvid,title from web"
+        for i in sql_list:
+            if not cursor.execute(sql_query):
+                for i in range(0,len(sql_list)):
+                    cursor.execute(sql,[sql_list[i][0],sql_list[i][1]])
         conn.commit()  # 提交事务 update delete insert操作
         print(f"{time.asctime()}更新最新数据完毕")
     except:
         traceback.print_exc()
     finally:
         close_conn(conn, cursor)
-# update_details()
+
+def text_input():
+    default_setting=',width="800",height="600"'
+    text="https://www.bilibili.com/video/{}".format(sql_list[0][0])
+    return text
+#update_details()
+url= text_input()
+
+r = requests.get(url, headers=headers)
+html = r.content.decode()
+soup = BeautifulSoup(html,'lxml')
+v = video.get_video_info(sql_list[0][0])
+print(v)
