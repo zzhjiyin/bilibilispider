@@ -106,12 +106,27 @@ def update_details():
 def text_input():
     default_setting=',width="800",height="600"'
     text="https://www.bilibili.com/video/{}".format(sql_list[0][0])
-    return text
+    get_aid="https://api.bilibili.com/x/web-interface/archive/stat?bvid={}".format((sql_list[0][0]))
+    get_cid="https://api.bilibili.com/x/player/pagelist?bvid={}&jsonp=jsonp".format(sql_list[0][0])
+    r = requests.get(get_cid, headers=headers)
+    jsont=  r.json()
+    cid = jsont['data']['cid']
+    r = requests.get(get_aid, headers=headers)
+    jsont=  r.json()
+    aid = jsont['data']['aid']
+    return text,cid,aid
 #update_details()
 url= text_input()
+def get_cid(url):
+    r = requests.get(url, headers=headers)
+    jsont = r.json()
+    cid = jsont['data'][0]['cid']
+    return cid
 
-r = requests.get(url, headers=headers)
-html = r.content.decode()
-soup = BeautifulSoup(html,'lxml')
-v = video.get_video_info(sql_list[0][0])
-print(v)
+
+def get_aid(url):
+    r = requests.get(url, headers=headers)
+    jsont = r.json()
+    aid = jsont['data']['aid']
+    return aid
+print(text_input())
