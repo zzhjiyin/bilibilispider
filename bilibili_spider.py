@@ -11,15 +11,12 @@ import pymysql
 headers = {
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
     }
-url="https://www.bilibili.com/video/BV1By4y1W7wV"
-def get_bv_des(url):
-    r = requests.get(url, headers=headers)
-    html = r.content.decode()
-    soup = BeautifulSoup(html,'lxml')
-    text = soup.find('div', class_='desc-info desc-v2 open').get_text()
-    # text = soup.select('#v_desc > div.desc-info.desc-v2.open > span')
-    print(text)
-    return text
+# url="https://space.bilibili.com/20927?from=search&seid=15325431671173261800"
+#
+# r = requests.get(url, headers=headers)
+# html = r.content.decode()
+# soup = BeautifulSoup(html,'lxml')
+#
 # v = video.get_video_info(bvid="BV1n64y127w4")
 # # print(json.dumps(v, indent=4, ensure_ascii=False))
 # json_str = json.dumps(v)
@@ -27,7 +24,6 @@ def get_bv_des(url):
 # result = pattern.findall(json_str)
 # # print(result)
 # print(v)
-
 results=[]
 title_list=[]
 bvid_list=[]
@@ -41,7 +37,7 @@ for i in results:
         bvid_list.append(i['bvid'])
         title_list.append(i['title'])
 sql_list = list(zip(bvid_list,title_list))
-print(sql_list)
+#print(sql_list)
 
 def get_conn():
     """
@@ -110,5 +106,36 @@ def update_details():
 def text_input():
     default_setting=',width="800",height="600"'
     text="https://www.bilibili.com/video/{}".format(sql_list[0][0])
-    return text
+    get_aid="https://api.bilibili.com/x/web-interface/archive/stat?bvid={}".format((sql_list[0][0]))
+    get_cid="https://api.bilibili.com/x/player/pagelist?bvid={}&jsonp=jsonp".format(sql_list[0][0])
+    r = requests.get(get_cid, headers=headers)
+    jsont=  r.json()
+    cid = jsont['data']['cid']
+    r = requests.get(get_aid, headers=headers)
+    jsont=  r.json()
+    aid = jsont['data']['aid']
+    return text,cid,aid
 #update_details()
+url= text_input()
+def get_cid(url):
+    r = requests.get(url, headers=headers)
+    jsont = r.json()
+    cid = jsont['data'][0]['cid']
+    return cid
+
+
+def get_aid(url):
+    r = requests.get(url, headers=headers)
+    jsont = r.json()
+    aid = jsont['data']['aid']
+    return aid
+print(text_input())
+
+def get_bv_des(url):
+    r = requests.get(url, headers=headers)
+    html = r.content.decode()
+    soup = BeautifulSoup(html,'lxml')
+    text = soup.find('div', class_='desc-info desc-v2 open').get_text()
+    # text = soup.select('#v_desc > div.desc-info.desc-v2.open > span')
+    print(text)
+    return text
