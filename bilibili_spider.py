@@ -46,7 +46,7 @@ def get_conn():
     # 创建连接
     conn = pymysql.connect(host="127.0.0.1",
                            user="root",
-                           password="4zzhjiyin",
+                           password="zh332233",
                            db="bilibili",
                            charset="utf8")
     # 创建游标
@@ -92,10 +92,28 @@ def update_details():
         print(f"{time.asctime()}开始更新最新数据")
         sql = "insert into web(bvid,title) values (%s,%s)"
         sql_query = "select bvid,title from web"
-        for i in sql_list:
-            if not cursor.execute(sql_query):
-                for i in range(0,len(sql_list)):
-                    cursor.execute(sql,[sql_list[i][0],sql_list[i][1]])
+        cursor.execute(sql_query)
+        query = cursor.fetchall()
+        # print(query[0][0])
+        query_list1=[]
+        query_list2=[]
+        for i in query:
+            query_list1.append(i[0])
+            query_list2.append(i[1])
+        # print(query_list)
+        update_list1 = [x for x in (bvid_list + query_list1) if x not in bvid_list]
+        update_list2 = [x for x in (title_list + query_list2) if x not in title_list]
+        update_list = list(zip(update_list1,update_list2))
+        print(update_list)
+        for i in range(0,len(update_list)):
+            cursor.execute(sql,[update_list[i][0],update_list[i][1]])
+        # for i in bvid_list:
+        #     if i not in query_list:
+        #         print(i)
+        # for i in sql_list:
+        #     if  not cursor.execute(sql_query):
+        #         for i in range(0,len(sql_list)):
+        #             cursor.execute(sql,[sql_list[i][0],sql_list[i][1]])
         conn.commit()  # 提交事务 update delete insert操作
         print(f"{time.asctime()}更新最新数据完毕")
     except:
@@ -103,39 +121,43 @@ def update_details():
     finally:
         close_conn(conn, cursor)
 
-def text_input():
-    default_setting=',width="800",height="600"'
-    text="https://www.bilibili.com/video/{}".format(sql_list[0][0])
-    get_aid="https://api.bilibili.com/x/web-interface/archive/stat?bvid={}".format((sql_list[0][0]))
-    get_cid="https://api.bilibili.com/x/player/pagelist?bvid={}&jsonp=jsonp".format(sql_list[0][0])
-    r = requests.get(get_cid, headers=headers)
-    jsont=  r.json()
-    cid = jsont['data']['cid']
-    r = requests.get(get_aid, headers=headers)
-    jsont=  r.json()
-    aid = jsont['data']['aid']
-    return text,cid,aid
-#update_details()
-url= text_input()
+def text_input(bv,aid,cid):
+    default_setting=' width="800" height="600"'
+    share_url = "https://www.bilibili.com/video/{}".format(bv)
+    video_url = '<iframe src="//player.bilibili.com/player.html?aid={}&bvid={}&cid={}&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"{}> </iframe>'  .format(aid,bv,cid,default_setting)
+    return share_url,video_url
+
 def get_cid(url):
-    r = requests.get(url, headers=headers)
+    get_cid="https://api.bilibili.com/x/player/pagelist?bvid={}&jsonp=jsonp".format(url)
+    r = requests.get(get_cid, headers=headers)
     jsont = r.json()
     cid = jsont['data'][0]['cid']
     return cid
 
 
 def get_aid(url):
-    r = requests.get(url, headers=headers)
+    get_aid="https://api.bilibili.com/x/web-interface/archive/stat?bvid={}".format(url)
+    r = requests.get(get_aid, headers=headers)
     jsont = r.json()
     aid = jsont['data']['aid']
     return aid
-print(text_input())
 
 def get_bv_des(url):
-    r = requests.get(url, headers=headers)
+    text="https://www.bilibili.com/video/{}".format(url)
+    r = requests.get(text, headers=headers)
     html = r.content.decode()
     soup = BeautifulSoup(html,'lxml')
     text = soup.find('div', class_='desc-info desc-v2 open').get_text()
     # text = soup.select('#v_desc > div.desc-info.desc-v2.open > span')
-    print(text)
     return text
+
+# update_details()
+aid = get_aid(sql_list[0][0])
+des = get_bv_des(sql_list[0][0])
+cid = get_cid(sql_list[0][0])
+text = text_input(sql_list[0][0],aid,cid)
+print("aid:",aid)
+print("cid:",cid)
+print("分享地址:\n",text[0])
+print("iframe:\n",text[1])
+print(des)
