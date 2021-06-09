@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from bilibili_api import video
 import re
 import csv
 import traceback
@@ -101,8 +100,8 @@ def update_details():
             query_list1.append(i[0])
             query_list2.append(i[1])
         # print(query_list)
-        update_list1 = [x for x in (bvid_list + query_list1) if x not in bvid_list]
-        update_list2 = [x for x in (title_list + query_list2) if x not in title_list]
+        update_list1 = [x for x in (bvid_list + query_list1) if x not in query_list1]
+        update_list2 = [x for x in (title_list + query_list2) if x not in query_list2]
         update_list = list(zip(update_list1,update_list2))
         print(update_list)
         for i in range(0,len(update_list)):
@@ -156,8 +155,12 @@ aid = get_aid(sql_list[0][0])
 des = get_bv_des(sql_list[0][0])
 cid = get_cid(sql_list[0][0])
 text = text_input(sql_list[0][0],aid,cid)
-print("aid:",aid)
-print("cid:",cid)
+# print("aid:",aid)
+# print("cid:",cid)
+# insert_history()
+update_details()
 print("分享地址:\n",text[0])
 print("iframe:\n",text[1])
 print(des)
+text="Due to the epidemic,my previous company fired me last year,and I have not found a job for a year;Also, I am the father of a child,and the monthly expenses of the child make me only temporarily support her through temporary work.I really urgently need a stable and well-paid job;I saw on the Internet that my community needs people in Python and a Certain understanding of Django. I hope to get certification through this course and get job opportunities;Finally,I really hope to learn this course because it`s about my life.I appreciate your help."
+print(len(text))
