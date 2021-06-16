@@ -162,5 +162,3 @@ update_details()
 print("分享地址:\n",text[0])
 print("iframe:\n",text[1])
 print(des)
-text="Due to the epidemic,my previous company fired me last year,and I have not found a job for a year;Also, I am the father of a child,and the monthly expenses of the child make me only temporarily support her through temporary work.I really urgently need a stable and well-paid job;I saw on the Internet that my community needs people in Python and a Certain understanding of Django. I hope to get certification through this course and get job opportunities;Finally,I really hope to learn this course because it`s about my life.I appreciate your help."
-print(len(text))
