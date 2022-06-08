@@ -10,6 +10,10 @@ import pymysql
 headers = {
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
     }
+proxies = {
+    'https': 'socks5://127.0.0.1:10808'
+
+}
 # url="https://space.bilibili.com/20927?from=search&seid=15325431671173261800"
 #
 # r = requests.get(url, headers=headers)
@@ -27,7 +31,7 @@ results=[]
 title_list=[]
 bvid_list=[]
 url="https://api.bilibili.com/x/space/arc/search?mid=20927&pn=1&ps=25&index=1&jsonp=jsonp"
-r = requests.get(url, headers=headers)
+r = requests.get(url, headers=headers,proxies=proxies)
 html = r.content.decode()
 jsont=  r.json()
 results= jsont['data']['list']['vlist']
@@ -88,7 +92,7 @@ def update_details():
     conn = None
     try:
         conn, cursor = get_conn()
-        print(f"{time.asctime()}开始更新最新数据")
+        # print(f"{time.asctime()}开始更新最新数据")
         sql = "insert into web(bvid,title) values (%s,%s)"
         sql_query = "select bvid,title from web"
         cursor.execute(sql_query)
@@ -103,7 +107,7 @@ def update_details():
         update_list1 = [x for x in (bvid_list + query_list1) if x not in query_list1]
         update_list2 = [x for x in (title_list + query_list2) if x not in query_list2]
         update_list = list(zip(update_list1,update_list2))
-        print(update_list)
+        # print(update_list)
         for i in range(0,len(update_list)):
             cursor.execute(sql,[update_list[i][0],update_list[i][1]])
         # for i in bvid_list:
@@ -114,11 +118,12 @@ def update_details():
         #         for i in range(0,len(sql_list)):
         #             cursor.execute(sql,[sql_list[i][0],sql_list[i][1]])
         conn.commit()  # 提交事务 update delete insert操作
-        print(f"{time.asctime()}更新最新数据完毕")
+        # print(f"{time.asctime()}更新最新数据完毕")
     except:
         traceback.print_exc()
     finally:
         close_conn(conn, cursor)
+    return update_list
 
 def text_input(bv,aid,cid):
     default_setting=' width="800" height="600"'
@@ -128,7 +133,7 @@ def text_input(bv,aid,cid):
 
 def get_cid(url):
     get_cid="https://api.bilibili.com/x/player/pagelist?bvid={}&jsonp=jsonp".format(url)
-    r = requests.get(get_cid, headers=headers)
+    r = requests.get(get_cid, headers=headers,proxies=proxies)
     jsont = r.json()
     cid = jsont['data'][0]['cid']
     return cid
@@ -136,29 +141,36 @@ def get_cid(url):
 
 def get_aid(url):
     get_aid="https://api.bilibili.com/x/web-interface/archive/stat?bvid={}".format(url)
-    r = requests.get(get_aid, headers=headers)
+    r = requests.get(get_aid, headers=headers,proxies=proxies)
     jsont = r.json()
     aid = jsont['data']['aid']
     return aid
 
 def get_bv_des(url):
     text="https://www.bilibili.com/video/{}".format(url)
-    r = requests.get(text, headers=headers)
+    r = requests.get(text, headers=headers,proxies=proxies)
     html = r.content.decode()
     soup = BeautifulSoup(html,'lxml')
-    text = soup.find('div', class_='desc-info desc-v2 open').get_text()
+    text = soup.find(name = 'div',attrs={'class':'desc-info desc-v2'}).get_text()
+    # text = soup.find('div', class_='desc-info desc-v2 open').get_text()
     # text = soup.select('#v_desc > div.desc-info.desc-v2.open > span')
     return text
-
+if __name__ == '__main__':
 # update_details()
-aid = get_aid(sql_list[0][0])
-des = get_bv_des(sql_list[0][0])
-cid = get_cid(sql_list[0][0])
-text = text_input(sql_list[0][0],aid,cid)
-# print("aid:",aid)
-# print("cid:",cid)
-# insert_history()
-update_details()
-print("分享地址:\n",text[0])
-print("iframe:\n",text[1])
-print(des)
+    aid = get_aid(sql_list[0][0])
+    des = get_bv_des(sql_list[0][0])
+    cid = get_cid(sql_list[0][0])
+    text = text_input(sql_list[0][0],aid,cid)
+    # print("aid:",aid)
+    # print("cid:",cid)
+    # insert_history()
+    update_list = update_details()
+    if len(update_list):
+        print(f"{time.asctime()}开始更新最新数据")
+        print(update_list)
+        print("分享地址:\n",text[0])
+        print("iframe:\n",text[1])
+        print(des)
+        print(f"{time.asctime()}更新最新数据完毕")
+    else:
+        print("no update")
